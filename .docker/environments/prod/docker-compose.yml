@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+  webserver:
+    image: nginx:latest
+    container_name: ${PROJECT_NAME}-nginx
+    ports:
+      - ${LOCALHOST_PORT}:80
+    depends_on:
+      - site
+    volumes:
+      - ./site.conf:/etc/nginx/conf.d/site.conf
+    volumes_from:
+      - site
+  site:
+    # build:
+    #   context: ../../../site
+    image: aaltomeri/apps:osa-site
+    container_name: ${PROJECT_NAME}-site
+    # volumes:
+    #   - osa_site_data:/var/www/
+    env_file:
+      - wp.env
+  db:
+    image: mysql:5.7
+    container_name: ${PROJECT_NAME}-db
+    volumes:
+      - osa_db_data:/var/lib/mysql
+    ports:
+      - "${DB_LOCALHOST_PORT}:3306"
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        MYSQL_DATABASE: ${DB_NAME}
+        MYSQL_USER: ${DB_USER}
+        MYSQL_PASSWORD: ${DB_PASSWORD}
+
+volumes:
+  osa_db_data:
+  # osa_site_data:
