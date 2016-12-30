@@ -1,0 +1,49 @@
+version: '2'
+
+services:
+  static:
+    image: nginx:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-static
+    ports:
+      - ${LOCALHOST_PORT}:80
+    depends_on:
+      - app
+      - db
+    volumes:
+      - ../../../www:/var/www
+      - ./site.conf:/etc/nginx/conf.d/default.conf
+  app:
+    build: 
+      context: ../../bedrock
+      args:
+        THEME_NAME: "${WP_PROJECT_NAME}"
+    image: aaltomeri/apps:bedrock-sage
+    container_name: ${COMPOSE_PROJECT_NAME}-app
+    depends_on:
+      - db
+    volumes:
+      - ../../../www:/var/www
+    extra_hosts:
+     - "remote_host:${XDEBUG_REMOTE_HOST}"
+    environment:
+      # THEME_NAME: ${WP_PROJECT_NAME}
+      WP_ENV: development
+      WP_HOME: http://${LOCALHOST_DOMAIN}:${LOCALHOST_PORT}
+      WP_SITEURL: http://${LOCALHOST_DOMAIN}:${LOCALHOST_PORT}/wp
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+  db:
+    image: mysql:5.7
+    container_name: ${COMPOSE_PROJECT_NAME}-db
+    volumes:
+      - ../../../.data/mysql:/var/lib/mysql
+    ports:
+      - "${DB_LOCALHOST_PORT}:3306"
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        MYSQL_DATABASE: ${DB_NAME}
+        MYSQL_USER: ${DB_USER}
+        MYSQL_PASSWORD: ${DB_PASSWORD}
